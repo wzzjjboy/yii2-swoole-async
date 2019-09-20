@@ -7,7 +7,8 @@ use Yii;
 use yii\db\Exception;
 use yii\db\Command;
 
-class DbCommand  extends Command{
+class DbCommand  extends Command {
+
     protected $_pendingParams = [];
 
     protected $_pendingParams2 = [];

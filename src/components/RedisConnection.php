@@ -8,17 +8,7 @@ use yii\helpers\Inflector;
 use  yii\redis\Connection;
 
 class RedisConnection extends Connection {
-    /**
-     * Allows issuing all supported commands via magic methods.
-     *
-     * ```php
-     * $redis->hmset('test_collection', 'key1', 'val1', 'key2', 'val2')
-     * ```
-     *
-     * @param string $name name of the missing method to execute
-     * @param array $params method call arguments
-     * @return mixed
-     */
+
     public function __call($name, $params)
     {
         $redisCommand = strtoupper(Inflector::camel2words($name, false));
@@ -26,7 +16,7 @@ class RedisConnection extends Connection {
             try{
                 return $this->executeCommand($redisCommand, $params);
             }catch (Exception $exception){
-                $this->_socket = false;
+                $this->close();
                 return $this->executeCommand($redisCommand, $params);
             }
 

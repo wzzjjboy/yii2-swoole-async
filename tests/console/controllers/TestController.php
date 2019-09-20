@@ -9,92 +9,77 @@
 namespace console\controllers;
 
 
-use yii\console\Controller;
-use yii2\orm_dcache\Invoice;
-use yii2\orm_dcache\InvoiceItem;
-use yii2\orm_dcache\Order;
-use yii2\orm_dcache\OrderItem;
-use yii2\orm_dcache\RelBusinessOrderInvoice;
-use yii2\orm_dcache\RelBusinessUserInvoice;
-use yii2\orm_dcache\RelMerchantInvoice;
-use yii2\orm_dcache\RelUserInvoice;
+use Yii;
 
-class TestController  extends Controller
-{
-    public function actionHello()
-    {
+use yii\console\Controller;
+use yii2\swoole_async\basic\Swoole;
+use yii\base\InvalidConfigException;
+use yii2\swoole_async\tasks\TestAsyncAsyncTask;
+
+class TestController  extends Controller {
+    public function actionHello() {
         print_r("hello");
     }
 
-    public function actionInvoice($orderSn)
-    {
-       print_r(Invoice::find()->where(['order_sn' =>$orderSn])->asArray(false)->one());
+    /**
+     * @return Swoole
+     * @throws InvalidConfigException
+     */
+    public function getSwoole(){
+        /** @var Swoole $swoole */
+        return Yii::$app->get("swoole");
     }
 
-    public function actionInvoiceItem($orderSn)
-    {
-       print_r(InvoiceItem::find()->where(['order_sn' => $orderSn])->asArray()->all());
+    /**
+     * 启动swoole
+     * @throws InvalidConfigException
+     */
+    public function actionStart() {
+        $this->getSwoole()->start();
     }
 
-    public function actionOrder($orderSn)
+    /**
+     * 停止
+     * @throws InvalidConfigException
+     */
+    public function actionStop()
     {
-       print_r(Order::find()->where(['order_sn' => $orderSn])->asArray()->all());
+        $this->getSwoole()->stop();
     }
 
-    public function actionOrderItem($orderSn)
+    /**
+     * 查询状态
+     * @throws InvalidConfigException
+     */
+    public function actionStatus()
     {
-       print_r(OrderItem::find()->where(['order_sn' => $orderSn])->asArray()->all());
+        $this->getSwoole()->status();
     }
 
-    public function actionRelMerchantInvoice($clientId, $orderSn)
+    /**
+     * 重启扫热服务
+     * @throws InvalidConfigException
+     */
+    public function actionReload()
     {
-       print_r(RelMerchantInvoice::find()->where(['client_id' => $clientId,'order_sn' => $orderSn])->asArray()->all());
+        $this->getSwoole()->reload();
     }
 
-    public function actionRelUserInvoice($userId, $orderSn)
+    /**
+     * 重启服务
+     * @throws InvalidConfigException
+     */
+    public function actionRestart()
     {
-       print_r(RelUserInvoice::find()->where(['user_id' => $userId,'order_sn' => $orderSn])->asArray()->all());
+        $this->getSwoole()->restart();
     }
 
-    public function actionRelBusinessOrderInvoice($saleId, $orderSn)
+
+    public function actionAsyncTask()
     {
-       print_r(RelBusinessOrderInvoice::find()->where(['b_order_id' => $saleId,'order_sn' => $orderSn])->asArray()->all());
+        TestAsyncAsyncTask::publish();
     }
 
-    public function actionRelBusinessUserInvoice($bUserId, $orderSn)
-    {
-       print_r(RelBusinessUserInvoice::find()->where(['b_user_id' => $bUserId,'order_sn' => $orderSn])->asArray()->all());
-    }
-
-    public function actionUpdate($orderSn)
-    {
-        /** @var Order $order */
-        $order = Order::find()->where(['order_sn' => $orderSn])->asArray(false)->one();
-        if (empty($order)){
-            die("查询失败");
-        }
-        print_r($order->toArray());
-        $order->b_user_id = "1234";
-        $saveRsp = $order->save();
-        if (!$saveRsp){
-            print_r($order->getErrors());
-        } else {
-            $order = Order::find()->where(['order_sn' => $orderSn])->asArray(true)->one();
-            print_r($order);
-        }
-    }
-
-    public function actionDelete($orderSn)
-    {
-        /** @var Order $order */
-        $order = Order::find()->where(['order_sn' => $orderSn])->asArray(false)->one();
-        if (empty($order)){
-            die("查询失败");
-        }
-        $order->delete();
-        $order = Order::find()->where(['order_sn' => $orderSn])->asArray(true)->one();
-        print_r($order);
-    }
 }
 
 
