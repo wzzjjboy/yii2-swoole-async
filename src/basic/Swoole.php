@@ -255,10 +255,9 @@ class Swoole extends Component implements IEngine
 
     public function onWorkerStart(swoole_server $server, int $worker_id)
     {
-
         if (!$server->taskworker){
-            $this->loadingTask();
             $this->log->trace("work start  \tid: {$worker_id} \tpid: {$server->worker_pid}");
+            $this->loadingTask();
             $this->trigger(self::EVENT_START);
         } else {
             $this->log->trace("task work start \tid: {$worker_id} \tpid: {$server->worker_pid}");
