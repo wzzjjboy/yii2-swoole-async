@@ -9,7 +9,22 @@ Yii2 SWOOLE ASYNC
 
 3. 配置
 
-   - 添加DB和SWOOLE配置，异步任务的持久化是能过DB完成的
+     建议添加到common\config\main-local.php文件添加
+
+     ```php
+     //测试环境配置
+     'dcache_data_center' => [
+             'url' => 'http://10.154.157.157:10003',
+             'key' => 'admvir8359MMjukd~644',
+     ],
+     //正式环境配置
+     'dcache_data_center' => [
+         'url' => 'https://kpc.wetax.com.cn',
+         'key' => 'o4e0-hpoe875wimmv12@7',
+     ],
+     ```
+     
+    - 添加dcache表对应的配置(此配置用于查询表结构，用于ORM操作)
 
      ```php
     'db' => [
