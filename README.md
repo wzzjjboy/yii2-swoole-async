@@ -14,13 +14,13 @@ Yii2 SWOOLE ASYNC
      ```php
      //测试环境配置
      'dcache_data_center' => [
-             'url' => 'http://10.154.157.157:10003',
-             'key' => 'admvir8359MMjukd~644',
+             'url' => 'http://xxxxxxxxxxxxx',
+             'key' => 'xxxxxxxxx',
      ],
      //正式环境配置
      'dcache_data_center' => [
-         'url' => 'https://kpc.wetax.com.cn',
-         'key' => 'o4e0-hpoe875wimmv12@7',
+         'url' => 'https://xxxxxxxxxxx',
+         'key' => 'xxxxxxxxxxxxxxxxx',
      ],
      ```
      
@@ -29,12 +29,12 @@ Yii2 SWOOLE ASYNC
      ```php
     'db' => [
           'class' => 'yii\db\Connection',
-          'dsn' => 'mysql:host=10.105.201.137;port=3307;dbname=providers',
-          'username' => 'root',
-          'password' => 'a6CFu3VH6OYW',
+          'dsn' => 'mysql:host=xxxxxxxxx;port=3307;dbname=xxxxxxxxx',
+          'username' => 'xxxxxxxxxx',
+          'password' => 'xxxxxxxxxxxx',
           'charset' => 'utf8',
-          'tablePrefix' => 'gpi_',
-          'commandClass' => 'yii2\swoole_async\components\DbCommand',
+          'tablePrefix' => 'xxxxxx',
+          'commandClass' => 'xxxxxxxxxxxxxxx',
       ],
      'swoole' => [
          'class'            => 'yii2\swoole_async\basic\Swoole',
