@@ -3,7 +3,7 @@ return [
     'components' => [
         'db' => [
             'class' => 'yii\db\Connection',
-            'dsn' => 'mysql:host=10.105.201.137;port=3307;dbname=providers',
+            'dsn' => 'mysql:host=xxxxxxxxxx;port=3307;dbname=providers',
             'username' => 'root',
             'password' => 'a6CFu3VH6OYW',
             'charset' => 'utf8',
@@ -12,17 +12,17 @@ return [
         ],
         'redis' => [
             'class' => 'yii2\swoole_async\components\RedisConnection',
-            'hostname' => '10.105.201.137',
+            'hostname' => 'xxxxxxxxxx',
             'port' => 7001,
             'database' => 1, //服务商
-            'password' => 'pUD85cOEvX22'
+            'password' => 'xxxxxxxxxx'
         ],
         'invoiceRedisEvent' => [
             'class'         => 'common\mqTask\tasks\InvoiceRedisEvent',
-            'host'          => '10.154.33.130',
+            'host'          => 'xxxxxxxxx',
             'port'          => '5672',
-            'username'      => 'rabbit',
-            'password'      => 'aTjHMj7opZ3d5Kw6',
+            'username'      => 'xxxxxxxxxx',
+            'password'      => 'xxxxxxxxxxxx',
             'exchange_name' => 'invoice.event',
             'queue_name'    => 'invoice.event#from.redis',
             'routing_key'   => 'from.redis',

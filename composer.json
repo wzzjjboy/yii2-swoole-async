@@ -2,6 +2,7 @@
     "name": "alan/yii2-swoole-async",
     "description": "yii2 framwork use dcache like yii2-orm",
     "type": "library",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "alan",
