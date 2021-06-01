@@ -1,6 +1,6 @@
 {
     "name": "alan/yii2-swoole-async",
-    "description": "yii2 framwork use dcache like yii2-orm",
+    "description": "yii2 framwork  swoole async task",
     "type": "library",
     "license": "Apache-2.0",
     "authors": [
