@@ -365,4 +365,9 @@ abstract class AsyncTask extends BaseObject
         $swoole = Yii::$app->get("swoole");
         $swoole->publish(self::generate($data));
     }
+
+    public function forPut(): string
+    {
+
+    }
 }
