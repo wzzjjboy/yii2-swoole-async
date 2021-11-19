@@ -6,23 +6,23 @@ namespace yii2\swoole_async\basic;
 
 trait ResponseTrait
 {
-    public function Running($pid)
+    public function showRunning($pid)
     {
         $this->show("MqTask正在运行 pid:%s。。。", $pid);
     }
 
-    public function Term()
+    public function showTerm()
     {
         $this->Show("MqTask未启动");
     }
 
-    public function SignTerm($pid)
+    public function showSignTerm($pid)
     {
 
         $this->Show("pid:%s 收到SIGTERM信号，准备退出...", $pid);
     }
 
-    public function  InvalidArgument($tmp, ...$args)
+    public function  showInvalidArgument($tmp, ...$args)
     {
         $this->show($tmp, ...$args);
     }

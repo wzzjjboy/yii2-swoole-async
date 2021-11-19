@@ -16,6 +16,7 @@ use yii\behaviors\TimestampBehavior;
  * Class Mysql
  * @package common\tasks
  * @property integer $task_id
+ * @property string $task_b_id
  * @property string $task_class
  * @property string $task_name
  * @property string $task_data
@@ -38,9 +39,9 @@ class Mysql extends ActiveRecord implements DB
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
-        return '{{%async_tasks_test}}';
+        return '{{%async_tasks_test_new}}';
     }
 
     /**
@@ -55,12 +56,13 @@ class Mysql extends ActiveRecord implements DB
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['task_data', 'task_name',], 'required'],
+            [['task_data', 'task_name', 'task_b_id'], 'required'],
             [['task_status', 'run_count'], 'integer'],
             [['task_name'], 'string' ,'max' => 20],
+            [['task_b_id'], 'string' ,'max' => 100],
             [['output', 'task_class'], 'string' ,'max' => 200],
             [['task_rule', 'task_data'], 'string' ,'max' => 500],
             [['finish_at', 'created_at', 'updated_at'], 'safe']
@@ -70,10 +72,11 @@ class Mysql extends ActiveRecord implements DB
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => 'ID',
+            'task_b_id' => '业务ID',
             'task_name' => '任务名称',
             'data' => '任务数据',
             'output' => '执行中的输出',
@@ -85,16 +88,24 @@ class Mysql extends ActiveRecord implements DB
         ];
     }
 
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => TimestampBehavior::className(),
+                'class' => TimestampBehavior::class,
                 'value' => function(){
                     return date("Y-m-d H:i:s");
                 },
             ]
         ];
+    }
+
+    /**
+     * @return string
+     */
+    public function getTaskBId(): string
+    {
+        return $this->task_b_id;
     }
 
     /**
@@ -144,7 +155,7 @@ class Mysql extends ActiveRecord implements DB
      */
     public function getRunCount(): int
     {
-        return $this->run_count;
+        return intval($this->run_count);
     }
 
     /**
@@ -165,13 +176,21 @@ class Mysql extends ActiveRecord implements DB
 
     /**
      * @param int $taskId
-     * @return self
+     * @return self|null
      */
-    public static function findTask(int $taskId)
+    public static function findTask(string $taskBId, string $taskName): ?DB
     {
-        return self::find()->where(['task_id' => $taskId])->one();
+        return self::find()->where(['task_b_id' => $taskBId, 'task_name' =>$taskName])->one();
     }
 
+    /**
+     * @param string $bid
+     * @return self|null
+     */
+    public static function findByBId(string $bid): ?DB
+    {
+        return self::find()->where(['task_b_id' => $bid])->one();
+    }
 
     public static function generate($data, &$msg = null)
     {
@@ -185,7 +204,7 @@ class Mysql extends ActiveRecord implements DB
         return $m;
     }
 
-    public function taskFinished()
+    public function taskFinished(): bool
     {
         $this->run_count += 1;
         $this->task_status = self::STATUS_FINISHED;
@@ -200,24 +219,24 @@ class Mysql extends ActiveRecord implements DB
         return $this->save();
     }
 
-    public function isFinish()
+    public function isFinish(): bool
     {
         return $this->task_status == self::STATUS_FINISHED;
     }
 
-    public function getTaskClass()
+    public function getTaskClass(): string
     {
         return $this->task_class;
     }
 
-    public function taskOver()
+    public function taskOver(): bool
     {
         $this->task_status = self::STATUS_UNFINISHED;
         $this->task_over = 1;
         return $this->save();
     }
 
-    public function isOver()
+    public function isOver(): bool
     {
         return $this->task_over == 1;
     }

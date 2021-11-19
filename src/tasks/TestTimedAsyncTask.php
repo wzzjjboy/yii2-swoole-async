@@ -15,7 +15,7 @@ class TestTimedAsyncTask extends AsyncTask
 {
     public $rule = [
         'type' => 'timed',
-        'rule' => '* * *'
+        'rule' => '*/30 * *'
     ];
 
     /**

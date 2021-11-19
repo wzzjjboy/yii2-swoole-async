@@ -2,14 +2,13 @@
 
 namespace yii2\swoole_async\basic;
 
-use Pheanstalk\Job;
-use Pheanstalk\Pheanstalk;
-use Swoole\Process;
-use Swoole\Process\Pool;
 use Yii;
+use Pheanstalk\Job;
+use Swoole\Process;
 use yii\base\Component;
+use Swoole\Process\Pool;
+use Pheanstalk\Pheanstalk;
 use yii\base\NotSupportedException;
-use yii2\mq_task\basic\ITask;
 
 /**
  *
@@ -17,26 +16,6 @@ use yii2\mq_task\basic\ITask;
 class Swoole extends Component implements IEngine
 {
     use ResponseTrait;
-    /**
-     * task进程启动事件
-     */
-    const EVENT_START = 'ent_swoole_on_start';
-
-    /**
-     * task work进程开始处理事件
-     */
-    const EVENT_WORK_ON_TASK = 'ent_swoole_on_task';
-
-    const TAB_WORK_ID = "work_id";
-
-    const TAB_RUN_COUNT = "run_cont";
-
-    const TAB_WORK_PID = 'work_pid';
-
-    /**
-     * @var swoole_server
-     */
-    private $server;
 
     /**
      * @var ILog
@@ -46,12 +25,12 @@ class Swoole extends Component implements IEngine
     /**
      * @var string
      */
-    public $host;
+    public $host = 'beanstalkd';
 
     /**
      * @var int
      */
-    public $port;
+    public $port = 11300;
 
     /**
      * @var int
@@ -59,30 +38,14 @@ class Swoole extends Component implements IEngine
     private $workerNum = 1;
 
     /**
-     * @var int
-     */
-    public $taskWorkerNum;
-
-    /**
-     * @var bool
-     */
-    public $daemonize;
-
-    /**
      * @var integer
      */
-    public $pid;
-
-    /**
-     * @var Table
-     */
-    private $tab;
+    private $runCount;
 
     /**
      * @var integer
      */
     public $maxRunCount = 10000;
-
 
     /**
      * @var AsyncTask
@@ -92,14 +55,17 @@ class Swoole extends Component implements IEngine
      * @var mixed
      */
     public $tube = 'default';
+
     /**
      * @var mixed|Pheanstalk
      */
     private $pheanstalk;
+
     /**
      * @var string
      */
     private $pidName = 'asyncTask';
+
 
     public function init()
     {
@@ -109,48 +75,60 @@ class Swoole extends Component implements IEngine
                 'class' => Log::class,
             ];
         }
+        if (is_string($this->log)){
+            $this->log = [
+                'class' => $this->log,
+            ];
+        }
         if (is_array($this->log)) {
             $this->log = Yii::createObject($this->log);
         }
         if (!$this->log instanceof ILog) {
-            $this->InvalidArgument("无效的log配置");
+            $this->showInvalidArgument("无效的log配置");
         }
     }
 
     /**
      * @param AsyncTask $task
      * @return bool
+     * @throws TaskException
      */
-    public function publish(AsyncTask $task)
+    public function publish(AsyncTask $task): bool
     {
-
-    }
-
-    /**
-     *
-     */
-    public function loadingTask():void
-    {
-        // TODO: implement here
-        $i = 0;
-        $this->log->trace("loading tasks... ");
-        ini_set('memory_limit', '256M');
-        try{
-            foreach ($this->taskClass::findAllForLoading() as $task)
-            {
-                $i++;
-                $this->publish($task);
-                if(0 == $i % 20){
-                    //sleep(2);禁用sleep
-                }
-            }
-            $this->log->trace("load tasks finish ");
-        }catch (TaskException $exception) {
-            $this->handlerTaskException($exception);
-        }catch (\Exception $e){
-            $this->handlerException($e);
+        $pheanstalk = Pheanstalk::create($this->host, $this->port, 2);
+        list($interval) = $task->getInterval();
+        if (!$interval){
+            $this->log->warning("get task:{$task->taskBId} interval get empty...");
+            return false;
         }
+        $taskData = AsyncJob::getPutData($task);
+        $pheanstalk->put($taskData, 1024, $interval, 60);
+        $this->log-> info("publish task:{$taskData} success.");
+        return true;
     }
+
+//    public function loadingTask():void
+//    {
+//        // TODO: implement here
+//        $i = 0;
+//        $this->log->trace("loading tasks... ");
+//        ini_set('memory_limit', '256M');
+//        try{
+//            foreach ($this->taskClass::findAllForLoading() as $task)
+//            {
+//                $i++;
+//                $this->publish($task);
+//                if(0 == $i % 20){
+//                    //sleep(2);禁用sleep
+//                }
+//            }
+//            $this->log->trace("load tasks finish ");
+//        }catch (TaskException $exception) {
+//            $this->handlerTaskException($exception);
+//        }catch (\Exception $e){
+//            $this->handlerException($e);
+//        }
+//    }
 
     /**
      * @inheritDoc
@@ -158,7 +136,7 @@ class Swoole extends Component implements IEngine
     public function start():void
     {
         if (($pid = $this->isRunning())) {
-            $this->Running($pid);
+            $this->showRunning($pid);
             return;
         }
         $pool = new Pool($this->workerNum);
@@ -174,116 +152,139 @@ class Swoole extends Component implements IEngine
                 $this->log->info("pid:{$process->pid} 收到SIGTERM信号，准备退出...");
             });
             while ($running) {
-                $free = false;
-                /** @var ITask $task */
                 $job = $pheanstalk->watch($this->tube)->reserveWithTimeout(2);
+                if (empty($job)){
+                    sleep(1);
+                    continue;
+                }
                 $this->onTask($job);
-                pcntl_signal_dispatch();
-                if ($free === true){
+                if (($this->runCount++) > $this->maxRunCount) {
                     Process::kill($process->pid, SIGTERM);
                 }
+                pcntl_signal_dispatch();
             }
         });
         $pool->start();
     }
 
-    public function onReceive(Pheanstalk $pheanstalk, ?Job $job): bool
-    {
-        $taskId = $job->getData();
-        $this->log->trace("onReceive taskId:{$taskId}");
-        try{
-            $task = $this->taskClass::findById($taskId);
-            list($first, $next) = $task->getInterval();
-            if (false === $first){
-                $task->taskOver();
-                $this->log->trace("task : ($task->taskId) has over " );
-                return false;
-            }
-            $this->intervalLog($task, $first, $next);
-            $pheanstalk->put($job->getData(), 1024, $next);
-        }catch (TaskException $exception) {
-            $this->pheanstalk->bury($job);
-            $this->handlerTaskException($exception);
-        }catch (\Exception $e){
-            $this->handlerException($e);
-            $this->pheanstalk->bury($job);
-        }
-    }
+//    public function onReceive(Pheanstalk $pheanstalk, ?Job $job): bool
+//    {
+//        $taskId = $job->getData();
+//        $this->log->trace("onReceive taskId:{$taskId}");
+//        try{
+//            $task = $this->taskClass::findById($taskId);
+//            list($first, $next) = $task->getInterval();
+//            if (false === $first){
+//                $task->taskOver();
+//                $this->log->trace("task : ($task->taskId) has over " );
+//                return false;
+//            }
+//            $this->intervalLog($task, $first, $next);
+//            $pheanstalk->put($job->getData(), 1024, $next);
+//        }catch (TaskException $exception) {
+//            $this->pheanstalk->bury($job);
+//            $this->handlerTaskException($exception);
+//        }catch (\Exception $e){
+//            $this->handlerException($e);
+//            $this->pheanstalk->bury($job);
+//        }
+//    }
 
     /**
      * @param AsyncTask $task
      * @param integer|false $first
      * @param null|integer|false $next
      */
-    private function intervalLog($task, $first, $next = null)
+    private function intervalLog(AsyncTask $task, $first, $next = null)
     {
         if ($task->rule->isTimed()){
-            $msg = "calc timed task($task->taskId) interval, first: $first, next: $next";
+            $msg = "calc timed task($task->taskBId) interval, first: $first, next: $next";
         } else {
             $taskType = $task->rule->isDelay() ? "delay" : "async";
-            $msg = "calc {$taskType} task({$task->taskId}) interval: $first";
+            $msg = "calc {$taskType} task({$task->taskBId}) interval: $first";
         }
         $this->log->trace($msg);
     }
 
 
-    public function onWorkerStart(swoole_server $server, int $worker_id)
-    {
-        if (!$server->taskworker){
-            $this->log->trace("work start  \tid: {$worker_id} \tpid: {$server->worker_pid}");
-            $this->loadingTask();
-            $this->trigger(self::EVENT_START);
-        } else {
-            $this->log->trace("task work start \tid: {$worker_id} \tpid: {$server->worker_pid}");
-        }
-    }
+//    public function onWorkerStart(swoole_server $server, int $worker_id)
+//    {
+//        if (!$server->taskworker){
+//            $this->log->trace("work start  \tid: {$worker_id} \tpid: {$server->worker_pid}");
+//            $this->loadingTask();
+//            $this->trigger(self::EVENT_START);
+//        } else {
+//            $this->log->trace("task work start \tid: {$worker_id} \tpid: {$server->worker_pid}");
+//        }
+//    }
 
 
     public function onTask(Job $job): bool
     {
-        $taskId = $job->getData();
-        $this->log->trace(["on task" => $taskId]);
+        $taskId = AsyncJob::getTaskId($job);
+        $taskName = AsyncJob::getTaskName($job);
+        $this->log->trace(["on task" => $job->getData()]);
         try{
-            $task = $this->taskClass::findById($taskId);
+            $task = $this->taskClass::findTask($taskId, $taskName);
             $task->run();
-            return $this->onFinish($task, $job);
-        }catch (\Exception $e){
-            $this->handlerException($e);
-            $this->pheanstalk->bury($job);
-            return false;
-        }
-    }
-
-    public function onFinish(AsyncTask $task, Job $job): bool
-    {
-        $this->log->trace("work: {$task->taskId} on finish}");
-        try{
-            $this->log->info([
-                'task_id' => $task->taskId,
-                'taskIsFinish' => $task->taskIsFinish(),
-                'taskIsOver' => $task->taskIsOver(),
-            ]);
             if ($task->taskIsFinish()){
-                $this->log->trace("task : ($task->taskId) has finished " );
+                $this->log->trace("task : ($task->taskBId) has finished " );
+                $this->pheanstalk->delete($job);
                 return true;
             }
             list($interval) = $task->getInterval();
             $this->intervalLog($task, $interval);
-
             if ($interval){
-                $this->pheanstalk->put($task->forPut(), 1024, $interval, 60);
+                $putData = AsyncJob::getPutData($task);
+                $this->pheanstalk->put($putData, 1024, $interval, 60);
+                $this->log->trace("task put again: ({$putData}) ... " );
             } elseif (false === $interval){
                 $task->taskOver();
-                $this->log->trace("task : ($task->taskId) has over " );
+                $this->log->trace("task : ($task->taskBId) has over " );
             }
+            $this->pheanstalk->delete($job);
+            return true;
         }catch (TaskException $exception) {
             $this->handlerTaskException($exception);
-            $this->pheanstalk->bury($job);
+            $this->pheanstalk->delete($job);
+            return false;
         }catch (\Exception $e){
             $this->handlerException($e);
-            $this->pheanstalk->bury($job);
+            $this->pheanstalk->delete($job);
+            return false;
         }
     }
+
+//    public function onFinish(AsyncTask $task, Job $job): bool
+//    {
+//        $this->log->trace("work: {$task->taskId} on finish}");
+//        try{
+//            $this->log->info([
+//                'task_id' => $task->taskId,
+//                'taskIsFinish' => $task->taskIsFinish(),
+//                'taskIsOver' => $task->taskIsOver(),
+//            ]);
+//            if ($task->taskIsFinish()){
+//                $this->log->trace("task : ($task->taskId) has finished " );
+//                return true;
+//            }
+//            list($interval) = $task->getInterval();
+//            $this->intervalLog($task, $interval);
+//
+//            if ($interval){
+//                $this->pheanstalk->put($task->forPut(), 1024, $interval, 60);
+//            } elseif (false === $interval){
+//                $task->taskOver();
+//                $this->log->trace("task : ($task->taskId) has over " );
+//            }
+//        }catch (TaskException $exception) {
+//            $this->handlerTaskException($exception);
+//            $this->pheanstalk->bury($job);
+//        }catch (\Exception $e){
+//            $this->handlerException($e);
+//            $this->pheanstalk->bury($job);
+//        }
+//    }
 
     /**
      * @inheritDoc
@@ -291,7 +292,7 @@ class Swoole extends Component implements IEngine
     public function stop():void
     {
         if (!($pid = $this->getPid())) {
-            $this->Term();
+            $this->showTerm();
             return;
         }
         Process::kill($pid, SIGTERM);
@@ -303,7 +304,7 @@ class Swoole extends Component implements IEngine
     public function status():void
     {
         if (!($pid = $this->isRunning())) {
-            $this->Term();
+            $this->showTerm();
             return;
         }
         echo sprintf("MqTask正在运行：%s。。。\n", $pid);
@@ -315,7 +316,7 @@ class Swoole extends Component implements IEngine
     public function reload(): void
     {
         if (!($pid = $this->getPid())) {
-            $this->Term();
+            $this->showTerm();
             return;
         }
         Process::kill($pid, SIGUSR1);
