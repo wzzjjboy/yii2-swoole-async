@@ -24,7 +24,7 @@ Yii2 SWOOLE ASYNC
      //正式环境配置
      'dcache_data_center' => [
          'url' => 'https://xxxxxxxxxxx',
-        'key' => 'xxxxxxxxxxxxxxxxx',
+         'key' => 'xxxxxxxxxxxxxxxxx',
    ],
     ```
     

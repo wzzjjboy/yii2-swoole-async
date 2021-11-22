@@ -3,7 +3,7 @@
     "description": "yii2 framwork  swoole async task",
     "type": "library",
     "license": "Apache-2.0",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "version": "2.0.0",
     "authors": [
         {
