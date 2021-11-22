@@ -2,6 +2,8 @@
 
 namespace yii2\swoole_async\models;
 
+use yii2\swoole_async\basic\AsyncTask;
+
 /**
  *
  */
@@ -129,4 +131,11 @@ interface DB
      * @return bool
      */
     public function isOver(): bool;
+
+    /**
+     * @param string $jobId
+     * @return bool
+     */
+    public function saveJob(string $jobId): bool;
 }
+

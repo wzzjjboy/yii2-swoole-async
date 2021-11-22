@@ -3,6 +3,7 @@
 namespace yii2\swoole_async\basic;
 
 use Pheanstalk\Job;
+use yii2\swoole_async\models\DB;
 
 class AsyncJob
 {
@@ -18,5 +19,13 @@ class AsyncJob
 
     public static function getPutData(AsyncTask $task) {
         return json_encode([$task->taskBId, $task->getTaskName()]);
+    }
+
+    /**
+     * @param DB $db
+     * @return string
+     */
+    public static function getPutDataWithDB(DB $db){
+        return json_encode([$db->getTaskBId(), $db->getName()]);
     }
 }

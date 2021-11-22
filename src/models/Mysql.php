@@ -8,15 +8,19 @@
 
 namespace yii2\swoole_async\models;
 
+use Pheanstalk\Job;
 use yii\db\ActiveRecord;
 use yii\db\BatchQueryResult;
 use yii\behaviors\TimestampBehavior;
+use yii2\swoole_async\basic\AsyncJob;
 
 /**
  * Class Mysql
  * @package common\tasks
  * @property integer $task_id
  * @property string $task_b_id
+ * @property integer $task_type
+ * @property string $job_id
  * @property string $task_class
  * @property string $task_name
  * @property string $task_data
@@ -59,7 +63,7 @@ class Mysql extends ActiveRecord implements DB
     public function rules(): array
     {
         return [
-            [['task_data', 'task_name', 'task_b_id'], 'required'],
+            [['task_data', 'task_name', 'task_b_id', 'task_type'], 'required'],
             [['task_status', 'run_count'], 'integer'],
             [['task_name'], 'string' ,'max' => 20],
             [['task_b_id'], 'string' ,'max' => 100],
@@ -77,6 +81,7 @@ class Mysql extends ActiveRecord implements DB
         return [
             'id' => 'ID',
             'task_b_id' => '业务ID',
+            'task_type' => '任务类型：1|Timed 2|Delay 3|Async',
             'task_name' => '任务名称',
             'data' => '任务数据',
             'output' => '执行中的输出',
@@ -239,5 +244,11 @@ class Mysql extends ActiveRecord implements DB
     public function isOver(): bool
     {
         return $this->task_over == 1;
+    }
+
+    public function saveJob(string $jobId): bool
+    {
+       $this->job_id = $jobId;
+       return $this->save(false);
     }
 }

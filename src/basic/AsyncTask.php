@@ -2,6 +2,7 @@
 
 namespace yii2\swoole_async\basic;
 
+use Pheanstalk\Job;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
@@ -215,7 +216,8 @@ abstract class AsyncTask extends BaseObject
             'task_name' => $task->getTaskName(),
             'task_data' => $task->toStr($task->data),
             'task_rule' => $task->rule->toJson(),
-            'task_b_id'  => $taskBId
+            'task_b_id'  => $taskBId,
+            'task_type' => $task->rule->getTypeNum(),
         ];
 
         if (Mysql::findTask($taskBId, $task->getTaskName())){
@@ -379,5 +381,15 @@ abstract class AsyncTask extends BaseObject
         /** @var Swoole $swoole */
         $swoole = Yii::$app->get("swoole");
         $swoole->publish(self::generate($taskBId, $data));
+    }
+
+    public function getJob(): Job
+    {
+        return new Job($this->db->job_id, AsyncJob::getPutData($this));
+    }
+
+    public function saveJobId(int $jobId):bool
+    {
+        return $this->db->saveJob($jobId);
     }
 }

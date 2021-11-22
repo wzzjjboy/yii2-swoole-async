@@ -2,6 +2,7 @@
 
 namespace yii2\swoole_async\basic;
 
+use common\base\BaseLog;
 use yii\base\BaseObject;
 
 class Log extends BaseObject implements ILog
@@ -16,8 +17,7 @@ class Log extends BaseObject implements ILog
             return null;
         }
 
-        $msg = is_array($msg) ? json_encode($msg, JSON_UNESCAPED_UNICODE) : $msg;
-        echo "[" . date('Y-m-d H:i:s') . "] [$level]: {$msg}" . PHP_EOL;
+        return is_array($msg) ? json_encode($msg, JSON_UNESCAPED_UNICODE) : $msg;
     }
 
     /**
@@ -27,7 +27,8 @@ class Log extends BaseObject implements ILog
      */
     public function error($msg):void
     {
-        $this->logFormat($msg, 'error');
+        $msg = $this->logFormat($msg, 'error');
+        BaseLog::error($msg);
     }
 
     /**
@@ -37,7 +38,8 @@ class Log extends BaseObject implements ILog
      */
     public function info($msg):void
     {
-        $this->logFormat($msg, 'info');
+        $msg = $this->logFormat($msg, 'info');
+        BaseLog::info($msg);
     }
 
     /**
@@ -47,7 +49,8 @@ class Log extends BaseObject implements ILog
      */
     public function warning($msg):void
     {
-        $this->logFormat($msg, 'warning');
+        $msg = $this->logFormat($msg, 'warning');
+        BaseLog::warning($msg);
     }
 
     /**
@@ -55,6 +58,7 @@ class Log extends BaseObject implements ILog
      */
     public function trace($msg): void
     {
-        $this->logFormat($msg, 'trace');
+        $msg = $this->logFormat($msg, 'trace');
+        BaseLog::info("[Trace]".$msg);
     }
 }

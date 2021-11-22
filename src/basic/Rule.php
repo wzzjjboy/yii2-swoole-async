@@ -15,6 +15,12 @@ class Rule extends Model
 //     */
 //    public $task;
 
+    const TASK_TYPE_TIMED = 1;
+
+    const TASK_TYPE_DELAY = 2;
+
+    const TASK_TYPE_ASYNC = 3;
+
     /**
      * @var string
      */
@@ -106,5 +112,10 @@ class Rule extends Model
             'class' => get_class($this),
             'rule' => $this->rule
         ], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getTypeNum(): int
+    {
+        return $this->isDelay() ? self::TASK_TYPE_DELAY : ($this->isAsync() ? self::TASK_TYPE_ASYNC : self::TASK_TYPE_TIMED);
     }
 }
