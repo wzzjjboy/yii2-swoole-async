@@ -26,6 +26,7 @@ class TestAsyncAsyncTask extends AsyncTask
         // TODO: Implement consume() method.
         print_r(__METHOD__);
         print_r($data);
+        sleep(1);
         return true;
     }
 }

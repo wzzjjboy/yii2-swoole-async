@@ -2,6 +2,8 @@
 
 namespace yii2\swoole_async\models;
 
+use yii2\swoole_async\basic\AsyncTask;
+
 /**
  *
  */
@@ -10,10 +12,18 @@ interface DB
 
     /**
      * 查询任务
-     * @param int $taskId
-     * @return DB
+     * @param int $taskBId
+     * @param string $taskName
+     * @return DB|null
      */
-    public static function findTask(int $taskId);
+    public static function findTask(string $taskBId, string $taskName) : ?DB;
+
+    /**
+     * 根据业务侧的ID查询任务
+     * @param string $bid
+     * @return mixed
+     */
+    public static function findByBId(string $bid) : ?DB;
 
     /**
      * 查询所有未未完成的任务
@@ -27,6 +37,12 @@ interface DB
      * @return int
      */
     public function getTaskId():int;
+
+    /**
+     * 获取业务ID
+     * @return string
+     */
+    public function getTaskBId(): string;
 
     /**
      * 获取task规则解析器
@@ -82,7 +98,7 @@ interface DB
      * 修改task的状态为完成
      * @return bool
      */
-    public function taskFinished();
+    public function taskFinished(): bool;
 
     /**
      * task未完成需要继续执行
@@ -100,7 +116,7 @@ interface DB
      * 获取task对应处理的类
      * @return string
      */
-    public function getTaskClass();
+    public function getTaskClass(): string;
 
     /**
      * task设置结束态
@@ -108,11 +124,18 @@ interface DB
      * 1.运行次数超限
      * @return bool
      */
-    public function taskOver();
+    public function taskOver(): bool;
 
     /**
      * 判断task是否为结束态
      * @return bool
      */
-    public function isOver();
+    public function isOver(): bool;
+
+    /**
+     * @param string $jobId
+     * @return bool
+     */
+    public function saveJob(string $jobId): bool;
 }
+

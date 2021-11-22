@@ -3,6 +3,8 @@
     "description": "yii2 framwork  swoole async task",
     "type": "library",
     "license": "Apache-2.0",
+    "minimum-stability": "dev",
+    "version": "2.0.0",
     "authors": [
         {
             "name": "alan",
@@ -14,7 +16,11 @@
         "yiisoft/yii2-redis": "^2.0",
         "ext-json": "*",
         "ext-swoole":"*",
-        "ext-pcntl": "*"
+        "ext-pcntl": "*",
+        "dragonmantank/cron-expression": "3.*",
+        "pda/pheanstalk": "4.*",
+        "swoole/ide-helper": "*",
+        "ext-posix": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "<7",

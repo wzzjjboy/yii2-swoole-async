@@ -17,7 +17,7 @@ class TestDelayAsyncTask extends AsyncTask
     public $rule = [
         'type' => 'delay',
         'rule' => [
-            '1s','5s',
+            '1s','5s','30s', '1s', '10m', '30m',
         ],
     ];
 
@@ -29,6 +29,7 @@ class TestDelayAsyncTask extends AsyncTask
     {
         // TODO: Implement consume() method.
         echo __METHOD__ . PHP_EOL;
+        sleep(1);
         return false;
     }
 }
