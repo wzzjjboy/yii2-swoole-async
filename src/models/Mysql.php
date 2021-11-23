@@ -45,7 +45,7 @@ class Mysql extends ActiveRecord implements DB
      */
     public static function tableName(): string
     {
-        return '{{%async_tasks_test_new}}';
+        return '{{%async_tasks_new}}';
     }
 
     /**
