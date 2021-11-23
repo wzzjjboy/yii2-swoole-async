@@ -89,8 +89,8 @@ Yii2 SWOOLE ASYNC
        `created_at` datetime NOT NULL COMMENT '创建时间',
        `updated_at` datetime NOT NULL COMMENT '更新时间',
        PRIMARY KEY (`task_id`),
-       KEY `idx_job_id` ()
-       KEY `task_status` (`task_status`,`task_over`) USING BTREE
+       KEY `idx_job_not_run` (`task_type`, `created_at`, `run_count`) USING BTREE,
+       KEY `idx_job_status` (`task_type`, `created_at`, `task_status`, `task_over`) USING BTREE
      ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='定时任务记录表';
      ```
    

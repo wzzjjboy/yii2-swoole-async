@@ -193,7 +193,7 @@ abstract class AsyncTask extends BaseObject
      * @throws TaskException
      * @throws InvalidConfigException
      */
-    public static function generate(string $taskBId, array $data): AsyncTask
+    public static function generate(string $taskBId, array $data, $repeat = false): AsyncTask
     {
         if (!is_array($data)){
             self::showError("data参数必须是数组");
@@ -220,7 +220,11 @@ abstract class AsyncTask extends BaseObject
             'task_type' => $task->rule->getTypeNum(),
         ];
 
-        if (Mysql::findTask($taskBId, $task->getTaskName())){
+        if ($repeat){
+            $config['task_b_id'] = $config['task_b_id'] ."|" . time();
+        }
+
+        if (Mysql::findTask($config['task_b_id'], $task->getTaskName())){
             throw new TaskException("任务：{$taskBId}已经存在...");
         }
 
