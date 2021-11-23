@@ -105,7 +105,7 @@ class Swoole extends Component implements IEngine
             return false;
         }
         $taskData = AsyncJob::getPutData($task);
-        $jobId = $pheanstalk->put($taskData, 1024, $interval, 60)->getId();
+        $jobId = $pheanstalk->useTube($this->tube)->put($taskData, 1024, $interval, 60)->getId();
         $task->saveJobId($jobId);
         $this->log-> info("publish task:{$taskData} success.");
         return true;
