@@ -2,7 +2,6 @@
 
 namespace yii2\swoole_async\basic;
 
-use common\base\BaseLog;
 use yii\base\BaseObject;
 
 class Log extends BaseObject implements ILog
