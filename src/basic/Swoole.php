@@ -149,6 +149,7 @@ class Swoole extends Component implements IEngine
             }
             $this->log->trace("master process closed...");
             $pool->shutdown();
+            $this->savePid(0);
         });
 //        Process::daemon(true, false);
         $this->savePid(getmypid());
@@ -190,7 +191,7 @@ class Swoole extends Component implements IEngine
             $this->intervalLog($task, $interval);
             if ($interval){
                 $putData = AsyncJob::getPutData($task);
-                $jobId = $this->pheanstalk->put($putData, 1024, $interval, 60)->getId();
+                $jobId = $this->pheanstalk->useTube($this->tube)->put($putData, 1024, $interval, 60)->getId();
                 $task->saveJobId($jobId);
                 $this->log->trace("task put again: ({$putData}) ... " );
             } elseif (false === $interval){
