@@ -193,7 +193,7 @@ abstract class AsyncTask extends BaseObject
      * @throws TaskException
      * @throws InvalidConfigException
      */
-    public static function generate(string $taskBId, array $data, $repeat = false): AsyncTask
+    public static function generate(string $taskBId, array $data, $repeat = true): AsyncTask
     {
         if (!is_array($data)){
             self::showError("data参数必须是数组");
