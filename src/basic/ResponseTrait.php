@@ -8,12 +8,12 @@ trait ResponseTrait
 {
     public function showRunning($pid)
     {
-        $this->show("MqTask正在运行 pid:%s。。。", $pid);
+        $this->show("AsyncTask正在运行 pid:%s。。。", $pid);
     }
 
     public function showTerm()
     {
-        $this->Show("MqTask未启动");
+        $this->Show("AsyncTask未启动");
     }
 
     public function showSignTerm($pid)

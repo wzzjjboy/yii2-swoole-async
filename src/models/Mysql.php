@@ -65,7 +65,7 @@ class Mysql extends ActiveRecord implements DB
         return [
             [['task_data', 'task_name', 'task_b_id', 'task_type'], 'required'],
             [['task_status', 'run_count'], 'integer'],
-            [['task_name'], 'string' ,'max' => 20],
+            [['task_name'], 'string' ,'max' => 100],
             [['task_b_id'], 'string' ,'max' => 100],
             [['output', 'task_class'], 'string' ,'max' => 200],
             [['task_rule', 'task_data'], 'string' ,'max' => 500],
