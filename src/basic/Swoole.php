@@ -96,8 +96,12 @@ class Swoole extends Component implements IEngine
      * @return bool
      * @throws TaskException
      */
-    public function publish(AsyncTask $task): bool
+    public function publish($task): bool
     {
+        if (!$task instanceof AsyncTask){
+            $this->log->warning("invalid task". var_export($task, true));
+            return false;
+        }
         $pheanstalk = Pheanstalk::create($this->host, $this->port, 2);
         list($interval) = $task->getInterval();
         if (!$interval){
